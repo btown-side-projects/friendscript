@@ -131,7 +131,8 @@ block
 
 
 statement
-  = expression
+  = FiMprogram
+  / expression
   / return
   / continue
   / break
@@ -1113,3 +1114,54 @@ UnicodeDigit = [\u0030-\u0039\u0660-\u0669\u06F0-\u06F9\u07C0-\u07C9\u0966-\u096
 UnicodeConnectorPunctuation = [\u005F\u203F\u2040\u2054\uFE33\uFE34\uFE4D-\uFE4F\uFF3F]
 ZWNJ = "\u200C"
 ZWJ = "\u200D"
+
+// Friendscript extensions (FiM prefix)
+// For now, no raw source support
+
+// Notes:
+// _ is optional whitespace, __ is required
+// identifierName is a single-word string. identifier is CS.Identifier
+// identifierPart is character
+// pattern for an unmodified token: w:"word" !identifierPart { return w; }
+
+// Debugging: { return new CS.JavaScript("console.log('FiM')"); }
+
+FiMprogram
+  = FiMstart _ TERMINATOR _ contents:FiMblock _ TERMINATOR _ FiMend
+    {
+      // return new CS.JavaScript("console.log('FiM')");
+
+      params = []
+      return new CS.DoOp(new CS.Function(params, contents).p(line, column, offset));
+    }
+
+FiMstart
+  = FiMsalutation _ (":" / ",")
+
+FiMend
+  = FiMvalediction
+
+FiMblock
+  = ss:(!FiMvalediction statement)* 
+    { return new CS.JavaScript("console.log('FiM')"); }
+
+FiMidentifier 
+  = first:FiMidentifierWord second:(_ FiMidentifierWord)? 
+    {
+      // TODO: camel case?
+      // var all = rest ? [first].concat(rest) : [first]
+      var all = second ? [first, second] : [first]
+      return new CS.Identifier(all.join('_')).r(all.join(' '));
+    }
+
+FiMidentifierWord = !FiMreserved identifierName
+
+FiMreserved
+  = FiMsalutation / FiMvalediction
+
+FiMsalutation = "Dear" !identifierPart
+
+FiMvalediction = "Your faithful student" ","?
+
+FiMidentifier
+  = !(reserved / FiMreserved)
