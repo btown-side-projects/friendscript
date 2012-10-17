@@ -81,4 +81,5 @@ quick:
 	printf %s "module.exports = " >"lib/coffee-script/parser.js.tmp"
 	$(PEGJS) <"src/grammar.pegjs" >>"lib/coffee-script/parser.js.tmp"
 	mv "lib/coffee-script/parser.js.tmp" "lib/coffee-script/parser.js"
-	bin/coffee --js <test/friendscript.coffee
+	bin/coffee --js --no-optimise <test/friendscript.coffee | tee test/friendscript.js
+	node test/friendscript.js

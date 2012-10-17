@@ -131,13 +131,12 @@ block
 
 
 statement
-  = FiMprogram
-  / expression
+  = expression
   / return
   / continue
   / break
   / throw
-expression = expressionworthy / seqExpression
+expression = FiMprogram / expressionworthy / seqExpression
 
 secondaryStatement
   = secondaryExpression
@@ -146,7 +145,7 @@ secondaryStatement
   / break
   / throw
 // secondaryExpression forbids anything lower precedence than assignmentExpression
-secondaryExpression = expressionworthy / assignmentExpression
+secondaryExpression = FiMprogram / expressionworthy / assignmentExpression
 
 // TODO: rename?
 expressionworthy
@@ -1127,31 +1126,52 @@ ZWJ = "\u200D"
 // Debugging: { return new CS.JavaScript("console.log('FiM')"); }
 
 FiMprogram
-  = FiMsalutation _ addressee:FiMidentifier? _ FiMcolon _ TERMINATOR _
-    contents:FiMblock _
+  = FiMsalutation _ addressee:FiMidentifier _ FiMcolon _ TERMINATOR _
+    block:FiMblock _
     FiMvalediction _ TERMINATOR _
     writer:FiMidentifier _ TERMINATOR _
     {
-      // return new CS.JavaScript("console.log('FiM')");
-      params = []
-      return new CS.DoOp(new CS.Function(params, contents).p(line, column, offset));
+      var params = [];
+      var func = new CS.Function(params, block).p(line, column, offset);
+
+      // Ideally we would wrap func with an AssignOp and a DoOp,
+      // but this is a known bug in CoffeeScriptII.
+      // Therefore, we forego the assignment of the function to the addressee.
+
+      /*
+      // Convoluted version creating a block with the assignment. Inelegant.
+      var wrapper = new CS.Block([
+        new CS.AssignOp(addressee, func),
+        new CS.Return(new CS.FunctionApplication(addressee, []))
+      ]);
+      */
+      var wrapper = new CS.DoOp(func);
+      return wrapper;
     }
 
 FiMblock
-  = !FiMvalediction s:statement ss:(_ TERMINATOR _ !FiMvalediction statement)* term:TERMINATOR?
+  = !FiMvalediction s:FiMstatement ss:(_ TERMINATOR _ !FiMvalediction FiMstatement)* term:TERMINATOR?
     {
       var raw = s.raw + ss.map(function(s){ return s[0] + s[1] + s[3] + s[4].raw; }).join('') + (term || '');
       // console.log(raw, s, ss);
       return new CS.Block([s].concat(ss.map(function(s){ return s[4]; }))).r(raw).p(line, column, offset);
     }
 
+FiMstatement
+  = statement
+
 FiMidentifier 
-  = first:FiMidentifierWord rest:(_ FiMidentifierWord)*
+  = first:FiMidentifierWord rest:(__ FiMidentifierWord)*
     {
-      // TODO: camel case?
-      var all = rest ? [first].concat(rest) : [first]
+      var all = [first];
+      if (rest) {
+        for (var i = 0; i < rest.length; ++i) {
+          all.push(rest[i][1]);
+        }
+      }
+      // console.log(all);
       // var all = second ? [first, second] : [first]
-      return new CS.Identifier(all.join('_')).r(all.join(' '));
+      return new CS.Identifier(all.join('')).r(all.join(' '));
     }
 
 FiMidentifierWord = !FiMreserved n:identifierName { return n; }
