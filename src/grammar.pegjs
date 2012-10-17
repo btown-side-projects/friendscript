@@ -1158,7 +1158,21 @@ FiMblock
     }
 
 FiMstatement
-  = statement
+  = FiMlogStatement
+  / statement
+
+FiMlogStatement
+  = "I" __ "said" __ expression:FiMprimaryExpression FiMstatementEnd
+    {
+      var console = new CS.Identifier("console");
+      var consoleLog = new CS.MemberAccessOp(console, "log");
+      return new CS.FunctionApplication(consoleLog, [expression]);
+    }
+
+FiMprimaryExpression
+  = FiMidentifier
+  / Numbers
+  / string
 
 FiMidentifier 
   = first:FiMidentifierWord rest:(__ FiMidentifierWord)*
@@ -1179,8 +1193,8 @@ FiMidentifierWord = !FiMreserved n:identifierName { return n; }
 FiMreserved
   = FiMsalutation / FiMvalediction / FiMcolon
 
+// Constant strings
 FiMsalutation = "Dear" !identifierPart
-
-FiMvalediction = "Your faithful student" ","?
-
+FiMvalediction = "Your faithful student" FiMcolon?
 FiMcolon = (":"/",")
+FiMstatementEnd = "." / "!"
