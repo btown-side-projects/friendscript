@@ -1,31 +1,58 @@
-CoffeeScript II: The Wrath of Khan
-==================================
+Friendscript is Magic
+=====================
 
 ```
-          {
-       }   }   {
-      {   {  }  }
-       }   }{  {
-      {  }{  }  }             _____       __  __
-     ( }{ }{  { )            / ____|     / _|/ _|
-   .- { { }  { }} -.        | |     ___ | |_| |_ ___  ___
-  (  ( } { } { } }  )       | |    / _ \|  _|  _/ _ \/ _ \
-  |`-..________ ..-'|       | |___| (_) | | | ||  __/  __/
-  |                 |        \_____\___/|_| |_| \___|\___|       .-''-.
-  |                 ;--.                                       .' .-.  )
-  |                (__  \     _____           _       _       / .'  / /
-  |                 | )  )   / ____|         (_)     | |     (_/   / /
-  |                 |/  /   | (___   ___ _ __ _ _ __ | |_         / /
-  |                 (  /     \___ \ / __| '__| | '_ \| __|       / /
-  |                 |/       ____) | (__| |  | | |_) | |_       . '
-  |                 |       |_____/ \___|_|  |_| .__/ \__|     / /    _.-')
-   `-.._________..-'                           | |           .' '  _.'.-''
-                                               |_|          /  /.-'_.'
-                                                           /    _.'
-                                                          ( _.-'
+ ,---.,---.  ,-.,---.  .-. .-.,'|"\     .---.   ,--, ,---.  ,-.,---. _______ 
+ | .-'| .-.\ |(|| .-'  |  \| || |\ \   ( .-._).' .') | .-.\ |(|| .-.\__   __|
+ | `-.| `-'/ (_)| `-.  |   | || | \ \ (_) \   |  |(_)| `-'/ (_)| |-' ))| |   
+ | .-'|   (  | || .-'  | |\  || |  \ \_  \ \  \  \   |   (  | || |--'(_) |   
+ | |  | |\ \ | ||  `--.| | |)|/(|`-' ( `-'  )  \  `-.| |\ \ | || |     | |   
+ )\|  |_| \)\`-'/( __.'/(  (_|__)`--' `----'    \____\_| \)\`-'/(      `-'   
+(__)      (__) (__)   (__)                               (__) (__)           
+,-.  .---.                                                                   
+|(| ( .-._)                                                                  
+(_)(_) \                                                                     
+| |_  \ \                                                                    
+| ( `-'  )                                                                   
+`-'`----'                                                                    
+                                                                             
+         .--.   ,--,  ,-.  ,--,                                              
+|\    /|/ /\ \.' .'   |(|.' .')                                              
+|(\  / / /__\ \  |  __(_)|  |(_)                                             
+(_)\/  |  __  \  \ ( _) |\  \                                                
+| \  / | |  |)|\  `-) ) | \  `-.                                             
+| |\/| |_|  (_))\____/`-'  \____\                                            
+'-'  '-'      (__)                                                    
+                                                                       
+
+ 
 ```
-If you haven't seen [the funded Kickstarter project](http://www.kickstarter.com/projects/michaelficarra/make-a-better-coffeescript-compiler)
-yet, you should check that out to find out more about this.
+
+"Friendscript" is a FiM++ inspired extension to CoffeeScript, based on
+[Michael Ficarra's Kickstarted rewrite of CoffeeScript](https://github.com/michaelficarra/CoffeeScriptRedux).
+
+Friendscript allows CoffeeScript to include
+blocks containing a Javascript-suitable variation on
+[the Friendship Reports 1.0 language specification](https://docs.google.com/document/d/1gU-ZROmZu0Xitw_pfC1ktCDvJH5rM85TxxQf5pg_xmg/edit#):
+
+> FiM++ is an esoteric programming language inspired by the “friendship
+> reports” written by Twilight Sparkle in the 2010 television show My
+> Little Pony: Friendship is Magic. It follows the same general
+> structure as Java, but uses full English, generally past-tense words
+> and sentence structure.
+
+Friendscript intends to make this into a full-featured programming language
+suitable for production use in web clients and on Node.JS.
+All source map and JS pretty printing support 
+present in CoffeeScript 2 will be present in Friendscript,
+and development will track the bleeding edge of CS2.
+
+Practically any existing CoffeeScript file will compile without changes.
+However, any line starting with `Dear`
+will indicate the beginning of a FiM++ block,
+and end on the first newline 
+after the first token after `Your faithful student,`.
+Thus, FiM++ and CoffeeScript can be interspersed.
 
 ### Getting Started
 
