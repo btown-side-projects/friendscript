@@ -1127,41 +1127,40 @@ ZWJ = "\u200D"
 // Debugging: { return new CS.JavaScript("console.log('FiM')"); }
 
 FiMprogram
-  = FiMstart _ TERMINATOR _ contents:FiMblock _ TERMINATOR _ FiMend
+  = FiMsalutation _ addressee:FiMidentifier? _ FiMcolon _ TERMINATOR _
+    contents:FiMblock _
+    FiMvalediction _ TERMINATOR _
+    writer:FiMidentifier _ TERMINATOR _
     {
       // return new CS.JavaScript("console.log('FiM')");
-
       params = []
       return new CS.DoOp(new CS.Function(params, contents).p(line, column, offset));
     }
 
-FiMstart
-  = FiMsalutation _ (":" / ",")
-
-FiMend
-  = FiMvalediction
-
 FiMblock
-  = ss:(!FiMvalediction statement)* 
-    { return new CS.JavaScript("console.log('FiM')"); }
+  = !FiMvalediction s:statement ss:(_ TERMINATOR _ !FiMvalediction statement)* term:TERMINATOR?
+    {
+      var raw = s.raw + ss.map(function(s){ return s[0] + s[1] + s[3] + s[4].raw; }).join('') + (term || '');
+      // console.log(raw, s, ss);
+      return new CS.Block([s].concat(ss.map(function(s){ return s[4]; }))).r(raw).p(line, column, offset);
+    }
 
 FiMidentifier 
-  = first:FiMidentifierWord second:(_ FiMidentifierWord)? 
+  = first:FiMidentifierWord rest:(_ FiMidentifierWord)*
     {
       // TODO: camel case?
-      // var all = rest ? [first].concat(rest) : [first]
-      var all = second ? [first, second] : [first]
+      var all = rest ? [first].concat(rest) : [first]
+      // var all = second ? [first, second] : [first]
       return new CS.Identifier(all.join('_')).r(all.join(' '));
     }
 
-FiMidentifierWord = !FiMreserved identifierName
+FiMidentifierWord = !FiMreserved n:identifierName { return n; }
 
 FiMreserved
-  = FiMsalutation / FiMvalediction
+  = FiMsalutation / FiMvalediction / FiMcolon
 
 FiMsalutation = "Dear" !identifierPart
 
 FiMvalediction = "Your faithful student" ","?
 
-FiMidentifier
-  = !(reserved / FiMreserved)
+FiMcolon = (":"/",")
