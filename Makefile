@@ -76,3 +76,9 @@ clean:
 	rm -rf instrumented
 	rm -f coverage.html
 	rm -rf lib
+
+quick:
+	printf %s "module.exports = " >"lib/coffee-script/parser.js.tmp"
+	$(PEGJS) <"src/grammar.pegjs" >>"lib/coffee-script/parser.js.tmp"
+	mv "lib/coffee-script/parser.js.tmp" "lib/coffee-script/parser.js"
+	bin/coffee --js <test/friendscript.coffee
