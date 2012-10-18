@@ -32,7 +32,7 @@ a Friendscript block can be surrounded in triple-backticks.
 Thus, Friendscript/FiM++ and CoffeeScript can be interspersed.
 In fact, Friendscript can be used as an rvalue!
 
-An example and test suite is at [test/friendscript.coffee](blob/master/test/friendscript.coffee).
+An example and test suite is at [test/friendscript.coffee](friendscript/blob/master/test/friendscript.coffee).
 
 ### Getting Started
 
