@@ -14,6 +14,10 @@ blocks containing a Javascript-suitable variation on
 > structure as Java, but uses full English, generally past-tense words
 > and sentence structure.
 
+(For more information, see the 
+[Scala reference implementation](https://github.com/KarolS/fimpp)
+and the [original post on Equestria Daily that launched the craze](http://www.equestriadaily.com/2012/10/editorial-fim-pony-programming-language.html))
+
 Friendscript intends to make this into a full-featured programming language
 suitable for production use in web clients and on Node.JS.
 Therefore, important changes have been made to the FiM++ syntax to support
