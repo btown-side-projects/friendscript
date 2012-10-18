@@ -1152,7 +1152,7 @@ FiMprogram
       var wrapper = new CS.DoOp(func);
       return wrapper;
     }
-  / FiMprogramQuotes _ TERMINATOR program:FiMprogram _ TERMINATOR _ FiMprogramQuotes
+  / FiMprogramQuotes _ TERMINATOR _ program:FiMprogram _ TERMINATOR _ FiMprogramQuotes
     {
       return program;
     }
