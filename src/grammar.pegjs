@@ -136,7 +136,7 @@ statement
   / continue
   / break
   / throw
-expression = FiMprogram / expressionworthy / seqExpression
+expression = expressionworthy / seqExpression
 
 secondaryStatement
   = secondaryExpression
@@ -145,11 +145,12 @@ secondaryStatement
   / break
   / throw
 // secondaryExpression forbids anything lower precedence than assignmentExpression
-secondaryExpression = FiMprogram / expressionworthy / assignmentExpression
+secondaryExpression = expressionworthy / assignmentExpression
 
 // TODO: rename?
 expressionworthy
-  = functionLiteral
+  = FiMprogram
+  / functionLiteral
   / conditional
   / while
   / loop
@@ -1128,10 +1129,10 @@ ZWJ = "\u200D"
 // & {console.error("possible definition", line, column); return true;}
 
 FiMprogram
-  = FiMsalutation _ addressee:FiMidentifier _ FiMcolon _ TERMINATOR _
+  = FiMsalutation _ addressee:FiMidentifier _ FiMcolon _ TERMINATOR? _
     block:FiMblock? _
-    FiMvalediction _ TERMINATOR _
-    writer:FiMidentifier
+    FiMvalediction _ TERMINATOR? _
+    writer:FiMidentifier FiMstatementEnd?
     {
       // console.error(writer);
       // console.error(postWriterWs+'~');
@@ -1155,13 +1156,13 @@ FiMprogram
       var wrapper = new CS.DoOp(func);
       return wrapper;
     }
-  / FiMprogramQuotes _ TERMINATOR _ program:FiMprogram _ TERMINATOR _ FiMprogramQuotes
+  / FiMprogramQuotes _ TERMINATOR? _ program:FiMprogram _ TERMINATOR? _ FiMprogramQuotes
     {
       return program;
     }
 
 FiMblock // note: assumes non-empty block
-  = !FiMvalediction s:FiMstatement ss:(_ TERMINATOR _ !FiMvalediction FiMstatement)* term:TERMINATOR?
+  = !FiMvalediction s:FiMstatement ss:(_ TERMINATOR? _ !FiMvalediction FiMstatement)* term:TERMINATOR?
     {
       var raw = s.raw + ss.map(function(s){ return s[0] + s[1] + s[3] + s[4].raw; }).join('') + (term || '');
       // console.log(raw, s, ss);
@@ -1198,7 +1199,7 @@ FiMdefinition
     FiMstatementEnd _ TERMINATOR _
       // TODO: allow, but do not require, an indented block
       block:FiMblock?
-    ((FiMthat FiMpossessive) / (FiMthat __ FiMassign)) __ (FiMhow __)? FiMto __
+    _ ((FiMthat FiMpossessive) / (FiMthat __ FiMassign)) __ (FiMhow __)? FiMto __
     verb2:FiMidentifierString // & { return verb2 == verb1; }
     FiMstatementEnd
     {
@@ -1222,7 +1223,7 @@ FiMargumentDeclaration // assuming there are arguments; user can make this optio
     }
 
 FiMreturnStatement
-  = "Then"i __ FiMactor __ "get"i __ e:FiMprimaryExpression FiMstatementEnd
+  = FiMthen? __ FiMactor __ FiMgot __ e:FiMprimaryExpression FiMstatementEnd
     {
       return new CS.Return(e);
     }
@@ -1274,6 +1275,8 @@ FiMprimaryExpression
   = FiMidentifier
   / Numbers
   / string
+  / FiMnull
+  / bool
 
 FiMidentifier
   = id:FiMidentifierString poss:FiMpossessive FiMidentifierWordSep property:FiMidentifierString
@@ -1309,11 +1312,15 @@ FiMfactPrefix
   = FiMdid __ FiMactor __ FiMknow
   / (FiMtoday FiMcolon? __)? FiMactor __ FiMlearned
 
+FiMnull
+  = "nothing"i
+    { return new CS.Null(); }
+
 FiMreserved
   = FiMsalutation / FiMvalediction / FiMcolon / FiMactor / FiMstatementEnd
   / FiMthat / FiMassign / FiMprogramQuotes / FiMpossessive / FiMto / FiMhow
   / FiMdid / FiMknow / FiMlearned / FiMwould / FiMtold / FiMasked / FiMtoday
-  / FiMsaid
+  / FiMsaid / FiMnull / FiMthen / FiMgot / bool
 
 // Constants
 FiMactor = "I" / "you"i
@@ -1329,6 +1336,8 @@ FiMwould = "would"i
 FiMtold = "told"i
 FiMasked = "asked"i
 FiMsaid = "said"i
+FiMthen = "then"i
+FiMgot = "got"i
 FiMsalutation = "Dear"i !identifierPart
 FiMvalediction = "Your faithful student"i FiMcolon?
 FiMcolon = (":"/",")
