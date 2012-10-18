@@ -83,3 +83,4 @@ quick:
 	mv "lib/coffee-script/parser.js.tmp" "lib/coffee-script/parser.js"
 	bin/coffee --js --no-optimise <test/friendscript.coffee | tee test/friendscript.js
 	node test/friendscript.js
+	rm -f test/friendscript.js
