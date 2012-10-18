@@ -1,8 +1,14 @@
 FiMScript: Friendscript is Magic
 ================================
 
-"Friendscript/FiMscript" is a FiM++ inspired extension to CoffeeScript, based on
+"Friendscript/FiMscript" is a friendship report-inspired esoteric 
+extension to CoffeeScript, with an implementation based on
 [Michael Ficarra's Kickstarted rewrite of CoffeeScript](https://github.com/michaelficarra/CoffeeScriptRedux).
+
+For those not familiar with [CoffeeScript](http://coffeescript.org/):
+
+> CoffeeScript is a little language that compiles into JavaScript. Underneath all those awkward braces and semicolons, JavaScript has always had a gorgeous object model at its heart. CoffeeScript is an attempt to expose the good parts of JavaScript in a simple way.
+> The golden rule of CoffeeScript is: "It's just JavaScript". The code compiles one-to-one into the equivalent JS, and there is no interpretation at runtime. You can use any existing JavaScript library seamlessly from CoffeeScript (and vice-versa). The compiled output is readable and pretty-printed, passes through JavaScript Lint without warnings, will work in every JavaScript runtime, and tends to run as fast or faster than the equivalent handwritten JavaScript.
 
 Friendscript allows CoffeeScript to include
 blocks containing a Javascript-suitable variation on
