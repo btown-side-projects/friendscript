@@ -1124,10 +1124,12 @@ ZWJ = "\u200D"
 // pattern for an unmodified token: w:"word" !identifierPart { return w; }
 
 // Debugging: { return new CS.JavaScript("console.log('FiM')"); }
+// Also, you can go into complicated statements and insert something like:
+// & {console.error("possible definition", line, column); return true;}
 
 FiMprogram
   = FiMsalutation _ addressee:FiMidentifier _ FiMcolon _ TERMINATOR _
-    block:FiMblock _
+    block:FiMblock? _
     FiMvalediction _ TERMINATOR _
     writer:FiMidentifier
     {
@@ -1136,6 +1138,7 @@ FiMprogram
       // console.error(postWriterTerm+'~');
       // console.error(postTermWs+'~');
       var params = [];
+      if (block == "") block = undefined;
       var func = new CS.Function(params, block).p(line, column, offset);
 
       // Ideally we would wrap func with an AssignOp and a DoOp,
@@ -1157,7 +1160,7 @@ FiMprogram
       return program;
     }
 
-FiMblock
+FiMblock // note: assumes non-empty block
   = !FiMvalediction s:FiMstatement ss:(_ TERMINATOR _ !FiMvalediction FiMstatement)* term:TERMINATOR?
     {
       var raw = s.raw + ss.map(function(s){ return s[0] + s[1] + s[3] + s[4].raw; }).join('') + (term || '');
@@ -1167,11 +1170,13 @@ FiMblock
 
 FiMstatement
   = FiMlogStatement
+  / FiMinvocation
   / FiMassignStatement
-  /// statement
+  / FiMdefinition
+  / FiMreturnStatement
 
 FiMlogStatement
-  = FiMactor __ "said" __ expression:FiMprimaryExpression FiMstatementEnd
+  = FiMactor __ FiMsaid __ expression:FiMprimaryExpression FiMstatementEnd
     {
       var console = new CS.Identifier("console");
       var consoleLog = new CS.MemberAccessOp(console, "log");
@@ -1179,11 +1184,90 @@ FiMlogStatement
     }
 
 FiMassignStatement
-  = ((FiMactor __ "learned") / ("Did" __ FiMactor __ "know")) __ FiMthat __
+  = FiMfactPrefix __ FiMthat __
     target:FiMidentifier __ FiMassign __ source:FiMprimaryExpression FiMstatementEnd
     {
       // console.error(target, source);
       return new CS.AssignOp(target, source);
+    }
+
+FiMdefinition
+  = prefix:FiMfactPrefix __ (FiMhow __)? FiMto __ verb:FiMidentifierString _
+    // TODO: allow "I learned my", which would assign to this[verb]
+    args:(__ a:FiMargumentDeclaration {return a;})? _
+    FiMstatementEnd _ TERMINATOR _
+      // TODO: allow, but do not require, an indented block
+      block:FiMblock?
+    ((FiMthat FiMpossessive) / (FiMthat __ FiMassign)) __ (FiMhow __)? FiMto __
+    verb2:FiMidentifierString // & { return verb2 == verb1; }
+    FiMstatementEnd
+    {
+      var params = args; // an array of strings
+      var func = new CS.Function(params, block == "" ? undefined : block);
+      var lval = new CS.Identifier(verb);
+      var assign = new CS.AssignOp(lval, func);
+      return assign;
+    }
+
+FiMargumentDeclaration // assuming there are arguments; user can make this optional with ?
+  = FiMstartArgs __ first:FiMidentifierString rest:(_ FiMsepArgs _ FiMidentifierString)*
+    {
+      var args = [first];
+      if (rest) {
+        for (var i = 0; i < rest.length; ++i) {
+          args.push(rest[i][3]);
+        }
+      }
+      return args; // an array of strings
+    }
+
+FiMreturnStatement
+  = "Then"i __ FiMactor __ "get"i __ e:FiMprimaryExpression FiMstatementEnd
+    {
+      return new CS.Return(e);
+    }
+
+FiMinvocation
+  = FiMfactPrefix __ FiMthat __ target:FiMidentifier __ specifier:FiMinvocationSpecifier
+    args:(__ a:FiMarguments {return a;})? _
+    FiMstatementEnd
+    {
+      var app = new CS.FunctionApplication(specifier, args);
+      return new CS.AssignOp(target, app);
+    }
+  / FiMactor __ specifier:FiMinvocationSpecifier
+    args:(__ a:FiMarguments {return a;})? _ FiMstatementEnd
+    {
+      return new CS.FunctionApplication(specifier, args);
+    }
+
+// Returns a reference to the function object to be called for:
+// told Target to act
+// asked Target to act
+// did act
+// would act
+// asked to act
+// said to act
+FiMinvocationSpecifier
+  = (FiMtold / FiMasked) __ parent:FiMidentifier __ FiMto __ method:FiMidentifierString
+    {
+      return new CS.MemberAccessOp(parent, method);
+    }
+  / (FiMdid / FiMwould) __ verb:FiMidentifier
+    {
+      return verb;
+    }
+
+FiMarguments
+  = FiMstartArgs __ first:FiMprimaryExpression rest:(_ FiMsepArgs _ FiMprimaryExpression)*
+    {
+      var args = [first];
+      if (rest) {
+        for (var i = 0; i < rest.length; ++i) {
+          args.push(rest[i][3]);
+        }
+      }
+      return args; // an array of primary expressions
     }
 
 FiMprimaryExpression
@@ -1221,16 +1305,35 @@ FiMidentifierString
 FiMidentifierWord = !FiMreserved n:identifierName { return n; }
 FiMidentifierWordSep = " "+
 
-// Constants
+FiMfactPrefix
+  = FiMdid __ FiMactor __ FiMknow
+  / (FiMtoday FiMcolon? __)? FiMactor __ FiMlearned
+
 FiMreserved
   = FiMsalutation / FiMvalediction / FiMcolon / FiMactor / FiMstatementEnd
-  / FiMthat / FiMassign / FiMprogramQuotes / FiMpossessive
-FiMactor = "I" / "you"
-FiMthat = "that"
-FiMassign = "was"
-FiMsalutation = "Dear" !identifierPart
-FiMvalediction = "Your faithful student" FiMcolon?
+  / FiMthat / FiMassign / FiMprogramQuotes / FiMpossessive / FiMto / FiMhow
+  / FiMdid / FiMknow / FiMlearned / FiMwould / FiMtold / FiMasked / FiMtoday
+  / FiMsaid
+
+// Constants
+FiMactor = "I" / "you"i
+FiMthat = "that"i
+FiMassign = "was"i
+FiMto = "to"i
+FiMhow = "how"i
+FiMdid = "did"i
+FiMknow = "know"i
+FiMlearned = "learned"i
+FiMtoday = "today"i
+FiMwould = "would"i
+FiMtold = "told"i
+FiMasked = "asked"i
+FiMsaid = "said"i
+FiMsalutation = "Dear"i !identifierPart
+FiMvalediction = "Your faithful student"i FiMcolon?
 FiMcolon = (":"/",")
-FiMstatementEnd = "." / "!" / "?"
+FiMstatementEnd = ("." / "!" / "?") / & TERMINATOR
 FiMprogramQuotes = "```"
-FiMpossessive = "'s" &_
+FiMpossessive = "'s"i &_
+FiMstartArgs = "given"i { return ''; }
+FiMsepArgs = ","
