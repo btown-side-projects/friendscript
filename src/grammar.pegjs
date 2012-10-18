@@ -1129,8 +1129,12 @@ FiMprogram
   = FiMsalutation _ addressee:FiMidentifier _ FiMcolon _ TERMINATOR _
     block:FiMblock _
     FiMvalediction _ TERMINATOR _
-    writer:FiMidentifier _ TERMINATOR _
+    writer:FiMidentifier
     {
+      // console.error(writer);
+      // console.error(postWriterWs+'~');
+      // console.error(postWriterTerm+'~');
+      // console.error(postTermWs+'~');
       var params = [];
       var func = new CS.Function(params, block).p(line, column, offset);
 
@@ -1148,6 +1152,10 @@ FiMprogram
       var wrapper = new CS.DoOp(func);
       return wrapper;
     }
+  / FiMprogramQuotes _ TERMINATOR program:FiMprogram _ TERMINATOR _ FiMprogramQuotes
+    {
+      return program;
+    }
 
 FiMblock
   = !FiMvalediction s:FiMstatement ss:(_ TERMINATOR _ !FiMvalediction FiMstatement)* term:TERMINATOR?
@@ -1159,14 +1167,23 @@ FiMblock
 
 FiMstatement
   = FiMlogStatement
-  / statement
+  / FiMassignStatement
+  /// statement
 
 FiMlogStatement
-  = "I" __ "said" __ expression:FiMprimaryExpression FiMstatementEnd
+  = FiMactor __ "said" __ expression:FiMprimaryExpression FiMstatementEnd
     {
       var console = new CS.Identifier("console");
       var consoleLog = new CS.MemberAccessOp(console, "log");
       return new CS.FunctionApplication(consoleLog, [expression]);
+    }
+
+FiMassignStatement
+  = ((FiMactor __ "learned") / ("Did" __ FiMactor __ "know")) __ FiMthat __
+    target:FiMidentifier __ FiMassign __ source:FiMprimaryExpression FiMstatementEnd
+    {
+      // console.error(target, source);
+      return new CS.AssignOp(target, source);
     }
 
 FiMprimaryExpression
@@ -1174,8 +1191,22 @@ FiMprimaryExpression
   / Numbers
   / string
 
-FiMidentifier 
-  = first:FiMidentifierWord rest:(__ FiMidentifierWord)*
+FiMidentifier
+  = id:FiMidentifierString poss:FiMpossessive FiMidentifierWordSep property:FiMidentifierString
+    {
+      // console.error(id);
+      // console.error(poss);
+      id = new CS.Identifier(id);
+      return new CS.MemberAccessOp(id, property);
+    }
+  / string:FiMidentifierString
+    {
+      // console.error(string);
+      return new CS.Identifier(string)
+    }
+
+FiMidentifierString
+  = first:FiMidentifierWord rest:(FiMidentifierWordSep FiMidentifierWord)*
     {
       var all = [first];
       if (rest) {
@@ -1183,18 +1214,23 @@ FiMidentifier
           all.push(rest[i][1]);
         }
       }
-      // console.log(all);
-      // var all = second ? [first, second] : [first]
-      return new CS.Identifier(all.join('')).r(all.join(' '));
+      // console.error(all);
+      return all.join('');
     }
 
 FiMidentifierWord = !FiMreserved n:identifierName { return n; }
+FiMidentifierWordSep = " "+
 
+// Constants
 FiMreserved
-  = FiMsalutation / FiMvalediction / FiMcolon
-
-// Constant strings
+  = FiMsalutation / FiMvalediction / FiMcolon / FiMactor / FiMstatementEnd
+  / FiMthat / FiMassign / FiMprogramQuotes / FiMpossessive
+FiMactor = "I" / "you"
+FiMthat = "that"
+FiMassign = "was"
 FiMsalutation = "Dear" !identifierPart
 FiMvalediction = "Your faithful student" FiMcolon?
 FiMcolon = (":"/",")
-FiMstatementEnd = "." / "!"
+FiMstatementEnd = "." / "!" / "?"
+FiMprogramQuotes = "```"
+FiMpossessive = "'s" &_
