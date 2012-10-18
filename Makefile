@@ -81,6 +81,11 @@ quick:
 	printf %s "module.exports = " >"lib/coffee-script/parser.js.tmp"
 	$(PEGJS) <"src/grammar.pegjs" >>"lib/coffee-script/parser.js.tmp"
 	mv "lib/coffee-script/parser.js.tmp" "lib/coffee-script/parser.js"
-	bin/coffee --js --no-optimise <test/friendscript.coffee | tee test/friendscript.js
-	node test/friendscript.js
-	rm -f test/friendscript.js
+	# node -e "console.log(require('util').inspect(require('lib/coffee-script/parser').parse(require('fs').readFileSync('test/friendscript.coffee', 'utf8')), true, null, true))"
+	bin/coffee --js --no-optimise <test/friendscript.coffee
+	$(MOCHA) test/friendscript.coffee
+
+browserify: bin/browserified.js
+
+bin/browserified.js:
+	browserify -r "./lib/coffee-script/command" -i "cscodegen" -i "requirejs" -i "domain" >"$@"
